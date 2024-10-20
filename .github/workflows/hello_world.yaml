@@ -44,7 +44,7 @@ jobs:
 
 
     - name: build docker image
-      run: docker build . --tag my-python-project/${{env.REPO_NAME}}:${{ env.IMAGE_TAG }}
+      run: docker build . --tag my-python-project:latest${{env.REPO_NAME}}:${{ env.IMAGE_TAG }}
 
     - name: login to docker hub
       run: docker login -u abbasabs -p Javascript1@
