@@ -64,8 +64,8 @@ jobs:
         password: ${{ secrets.EMAIL_PASSWORD }}
         subject: 'Build Failed'
         body: 'The build on branch ${{ github.event.pull_request.head.ref || github.event.ref }} failed. Please check the build logs for details.'
-        from: 'your-email@example.com'
-        to: 'recipient@example.com'
+        from: 'abbasabs14@gmail.com.com'
+        to: 'wazirali56@gmail.com.com'
 
   comment:
     needs: build
