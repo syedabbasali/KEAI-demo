@@ -1,4 +1,4 @@
-name: Hello world workflow
+name: Build, Test, and Notify
 
 on:
   push:
@@ -7,19 +7,95 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
-  hello:
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: echo "hello world"
-        shell: bash
 
-  goodbye:
-    runs-on: ubuntu-latest
     steps:
-      - name: goodbye world
-        run: echo "goodbye world"
-        shell: bash
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+        
+    - name: Upgrade pip
+      run: |
+        python -m pip install --upgrade pip
+        
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run build script
+      run: |
+        echo "Running build script"  # Replace with your actual build/compile commands
+
+    - name: Run tests
+      run: |
+        pytest  # Replace with your testing commands, e.g., pytest
+
+  notify:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Send email notification on failure
+      if: failure()
+      uses: dawidd6/action-send-mail@v2
+      with:
+        server_address: smtp.example.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: 'Build Failed'
+        body: 'The build on branch ${{ github.event.pull_request.head.ref || github.event.ref }} failed. Please check the build logs for details.'
+        from: 'your-email@example.com'
+        to: 'recipient@example.com'
+
+  comment:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Add a comment to the pull request
+      if: failure()
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const context = github.context;
+          const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+
+          octokit.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: 'The build failed. Please check the build logs for details.',
+          });
