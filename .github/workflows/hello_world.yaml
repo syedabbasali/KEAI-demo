@@ -48,7 +48,19 @@ jobs:
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u abbasabs --password-stdin # Login securely to Docker Hub
 
     - name: Push to Docker Hub  
-      run: docker push abbasabs/${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }} # Push the image to Docker Hub
+      run: docker push abbasabs${{ env.REPO_NAME }}:${{ env.IMAGE_TAG }} # Push the image to Docker Hub
+
+    - name: Pull docker image file to EC2
+      uses: appleboy/ssh-action@master
+      with: 
+          host: ${{ secrets.EC2_Public_IP}}
+          username: ec2-user
+          key: ${{ secrets.SSH_KEY_SECRET }}
+          script: |
+            sudo systemctl start docker
+            sudo docker pull abbasabs/${{env.REPO_NAME}}:${{ env.IMAGE_TAG }}
+            sudo docker run -d abbasabs/${{env.REPO_NAME}}:${{ env.IMAGE_TAG }}
+ 
 
   # Notification Job to notify on build failures
   notify:
